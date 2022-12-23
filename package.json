@@ -1,0 +1,24 @@
+{
+  "name": "trans1ator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manasseh-fikadu/trans1ator.git"
+  },
+  "author": "Minase Fikadu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/manasseh-fikadu/trans1ator/issues"
+  },
+  "homepage": "https://github.com/manasseh-fikadu/trans1ator#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "telegraf": "^4.11.2"
+  }
+}
