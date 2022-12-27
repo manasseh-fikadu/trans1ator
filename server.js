@@ -9,15 +9,14 @@ const PORT = 3000 || process.env.PORT;
 
 const { Telegraf } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
 bot.telegram.setWebhook(
   process.env.WEBHOOK_URL + "/bot" + process.env.BOT_TOKEN
 );
+
 app.use(bot.webhookCallback("/bot" + process.env.BOT_TOKEN));
 
 app.post("/system", (req, res) => {
-  let messageObj = req && req0.message;
-  let chatIdSrc = messageObj && messageObjchatid;
-  let fromUserNameSrc = messageObj && messageObjfromusername;
   res.status(200).end();
 });
 
@@ -29,7 +28,7 @@ app.listen(PORT, () => {
         process.env.WEBHOOK_URL + "/bot" + process.env.BOT_TOKEN
       );
     } else {
-      console.log("Webhook is already set");
+      console.log("Webhook Set!");
     }
   });
 });
@@ -50,88 +49,82 @@ bot.help((ctx) => {
   );
 });
 
+const languageCodeMapping = {
+    english: "en",
+    chinese: "zh",
+    french: "fr",
+    german: "de",
+    italian: "it",
+    japanese: "ja",
+    korean: "ko",
+    portuguese: "pt",
+    russian: "ru",
+    spanish: "es",
+    amharic: "am",
+    hindi: "hi",
+    arabic: "ar",
+    turkish: "tr",
+    greek: "el",
+};
+
 bot.command("translate", (ctx) => {
-  const relevant = [
-    "English",
-    "Chinese",
-    "French",
-    "German",
-    "Italian",
-    "Japanese",
-    "Korean",
-    "Portuguese",
-    "Russian",
-    "Spanish",
-    "Amharic",
-    "Hindi",
-    "Arabic",
-    "Turkish",
-    "Greek",
-  ];
 
-  const languageCodeMapping = {
-    English: "en",
-    Chinese: "zh",
-    French: "fr",
-    German: "de",
-    Italian: "it",
-    Japanese: "ja",
-    Korean: "ko",
-    Portuguese: "pt",
-    Russian: "ru",
-    Spanish: "es",
-    Amharic: "am",
-    Hindi: "hi",
-    Arabic: "ar",
-    Turkish: "tr",
-    Greek: "el",
-    };
+    // prompt the user to enter the source language and the destination language
+    ctx.reply(
+        "Enter the source language and the destination language in the format: source language - text to be translated - destination language"
+    );
 
-  ctx.reply("Choose the source language", {
-    // make the prompt a two column keyboard
-    reply_markup: {
-      keyboard: [
-        relevant.slice(0, 5),
-        relevant.slice(5, 10),
-        relevant.slice(10, 15),
-      ],
-      one_time_keyboard: true,
-    },
-  });
-  // copy the all the relevant array values to a new array
-  // get the selected button's text
-  bot.hears(relevant, (ctx) => {
-    // save the source language
-    var source = ctx.message.text;
-    ctx.reply("Choose the target language", {
-      // make the prompt a two column keyboard
-      reply_markup: {
-        keyboard: [
-          relevant.slice(0, 5),
-          relevant.slice(5, 10),
-          relevant.slice(10, 15),
-        ],
-        one_time_keyboard: true,
-      },
-    });
-    bot.hears((ctx) => {
-      // save the target language
-      var target = ctx.message.text;
-      console.log("t" + target);
-      // get the selected button's text
-      ctx.reply("Enter the text to translate");
-      // get the text to translate change the deprecated on to onText
-      bot.onText(/(.+)/, (ctx) => {
-        var text = ctx.message.text;
-        // translate the text
-        source = languageCodeMapping[source];
-        target = languageCodeMapping[target];
-        api.translate(text, source, target).then((translation) => {
-          ctx.reply(translation.data.translations[0].translatedText);
-        });
-      });
-    });
-  });
+    const outerContext = ctx;
+
+    // listen for the user's response
+    bot.on((ctx) => {
+        // get the user's response
+        let userResponse = ctx.message.text;
+        // if the user's response is not in the correct format, prompt the user to enter the source language and the destination language again
+        if (!userResponse.includes("-")) {
+            ctx.reply(
+                "Please enter the source language and the destination language in the format: source language - text to be translated - destination language"
+            );
+            return;
+        }
+        // remove every whitespace next to and before the hyphen
+        userResponse = userResponse.replace(/\s*-\s*/g, "-");
+
+        // split the user's response into an array
+        let userResponseArray = userResponse.split("-");
+
+        // get the source language
+        let sourceLanguage = userResponseArray[0].toLowerCase();
+
+        // get the text to be translated
+        let textToBeTranslated = userResponseArray[1];
+
+        // get the destination language
+        let destinationLanguage = userResponseArray[2].toLowerCase();
+
+        // get the language code of the source language
+        let sourceLanguageCode = languageCodeMapping[sourceLanguage];
+
+        // get the language code of the destination language
+        let destinationLanguageCode = languageCodeMapping[destinationLanguage];
+
+        // call the api and return the response use async await
+        api
+            .translate(sourceLanguageCode, destinationLanguageCode, textToBeTranslated)
+            .then((response) => {
+                // return the response for usage in the next then block
+                const answer = response.data.translatedText;
+                return answer;
+            })
+            .then((answer) => {
+              outerContext.reply(answer);
+            })
+            .catch((error) => {
+                console.log(error);
+            }
+        );
+    });    
+  
 });
 
 bot.launch();
