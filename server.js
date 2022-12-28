@@ -128,4 +128,11 @@ bot.command("translate", (ctx) => {
   
 });
 
-bot.launch();
+bot.launch({
+  webhook: {
+    domain: process.env.WEBHOOK_URL,
+    port: PORT,
+  },
+
+  polling: false,
+});
