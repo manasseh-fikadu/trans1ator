@@ -25,12 +25,10 @@ app.post("/system", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   bot.telegram.getWebhookInfo().then((info) => {
-    if (info.url !== `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`) {
-      bot.telegram.setWebhook(
-        `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
-      );
-    } else {
+    if (info.url === `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`) {
       console.log("Webhook Set!");
+    } else {
+      console.log("Webhook not set!");
     }
   });
 });
