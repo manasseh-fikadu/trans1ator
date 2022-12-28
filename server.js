@@ -12,36 +12,27 @@ const PORT = 3000 || process.env.PORT;
 const { Telegraf } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// bot.telegram.setWebhook(
-//   `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
-// );
+bot.telegram.setWebhook(
+  `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+);
 
-// app.use(bot.webhookCallback(`/bot${process.env.BOT_TOKEN}`));
+app.use(bot.webhookCallback(`/bot${process.env.BOT_TOKEN}`));
 
 app.post("/system", (req, res) => {
   res.status(200).end();
 });
 
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-//   bot.telegram.getWebhookInfo().then((info) => {
-//     if (info.url !== `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`) {
-//       bot.telegram.setWebhook(
-//         `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
-//       );
-//     } else {
-//       console.log("Webhook Set!");
-//     }
-//   });
-// });
-
-bot.launch({
-  webhook: {
-    domain: process.env.WEBHOOK_URL,
-    port: PORT,
-  },
-
-  polling: false,
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  bot.telegram.getWebhookInfo().then((info) => {
+    if (info.url !== `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`) {
+      bot.telegram.setWebhook(
+        `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+      );
+    } else {
+      console.log("Webhook Set!");
+    }
+  });
 });
 
 bot.start((ctx) => {
@@ -138,6 +129,4 @@ bot.command("translate", (ctx) => {
   
 });
 
-
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+bot.launch();
