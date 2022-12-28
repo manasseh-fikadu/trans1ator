@@ -129,10 +129,9 @@ bot.command("translate", (ctx) => {
 });
 
 bot.launch({
-  webhook: {
-    domain: process.env.WEBHOOK_URL,
-    port: PORT,
-  },
-
-  polling: false,
+  polling: false
 });
+
+// graceful shutdown
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
