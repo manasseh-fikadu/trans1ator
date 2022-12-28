@@ -35,6 +35,15 @@ app.post("/system", (req, res) => {
 //   });
 // });
 
+bot.launch({
+  webhook: {
+    domain: process.env.WEBHOOK_URL,
+    port: PORT,
+  },
+
+  polling: false,
+});
+
 bot.start((ctx) => {
   ctx.reply(
     "Welcome to the language translator bot!" +
@@ -129,14 +138,6 @@ bot.command("translate", (ctx) => {
   
 });
 
-bot.launch({
-  webhook: {
-    domain: process.env.WEBHOOK_URL,
-    port: PORT,
-  },
-
-  polling: false,
-});
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
