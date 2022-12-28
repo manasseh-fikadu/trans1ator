@@ -122,6 +122,7 @@ bot.command("translate", (ctx) => {
               outerContext.reply(answer);
             })
             .catch((error) => {
+                outerContext.reply("Server error occured :( Please Try again");
                 console.log(error);
             }
         );
