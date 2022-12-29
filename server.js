@@ -13,11 +13,11 @@ const { Telegraf } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // set the webhook and handle the UnhandledPromiseRejectionWarning
-bot.telegram.setWebhook(`${process.env.WEBHOOK_URL}/bot${process.env.BOT_TOKEN}`).catch((error) => {
+bot.telegram.setWebhook(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`).catch((error) => {
   console.log(error);
 });
 
-app.use(bot.webhookCallback(`/bot${process.env.BOT_TOKEN}`));
+app.use(bot.webhookCallback(`/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`));
 
 app.post("/system", (req, res) => {
   res.status(200).end();
