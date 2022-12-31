@@ -133,12 +133,3 @@ bot.launch({
 
 // graceful shutdown
 process.once("SIGINT", () => bot.stop("SIGINT"));
-
-bot.telegram.getWebhookInfo().then((info) => {
-  if (
-    info.url ===
-    `https://api.telegram.org/bot${process.env.BOT_TOKEN}`
-  ) {
-    bot.telegram.deleteWebhook();
-  }
-});
