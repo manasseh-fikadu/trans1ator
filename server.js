@@ -20,12 +20,6 @@ bot.telegram
     console.log(error);
   });
 
-app.use(
-  bot.webhookCallback(
-    `/bot${process.env.BOT_TOKEN}`
-  )
-);
-
 app.post("/system", (req, res) => {
   res.status(200).end();
 });
