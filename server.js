@@ -14,7 +14,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.telegram
   .setWebhook(
-    `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+    `https://api.telegram.org/bot${process.env.BOT_TOKEN}`
   )
   .catch((error) => {
     console.log(error);
@@ -22,7 +22,7 @@ bot.telegram
 
 app.use(
   bot.webhookCallback(
-    `/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+    `/bot${process.env.BOT_TOKEN}`
   )
 );
 
@@ -35,7 +35,7 @@ app.listen(PORT, () => {
   bot.telegram.getWebhookInfo().then((info) => {
     if (
       info.url ===
-      `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+      `https://api.telegram.org/bot${process.env.BOT_TOKEN}`
     ) {
       console.log("Webhook Set!");
     } else {
