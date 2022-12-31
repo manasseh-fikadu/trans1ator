@@ -7,17 +7,24 @@ const app = express();
 
 const PORT = 3000 || process.env.PORT;
 
-// set up a webhook using 
+// set up a webhook using
 
-const { Telegraf } = require("telegraf");
+const { Telegraf, Composer, Markup, Scenes, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// set the webhook and handle the UnhandledPromiseRejectionWarning
-bot.telegram.setWebhook(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`).catch((error) => {
-  console.log(error);
-});
+bot.telegram
+  .setWebhook(
+    `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+  )
+  .catch((error) => {
+    console.log(error);
+  });
 
-app.use(bot.webhookCallback(`/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`));
+app.use(
+  bot.webhookCallback(
+    `/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+  )
+);
 
 app.post("/system", (req, res) => {
   res.status(200).end();
@@ -26,7 +33,10 @@ app.post("/system", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   bot.telegram.getWebhookInfo().then((info) => {
-    if (info.url === `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`) {
+    if (
+      info.url ===
+      `https://api.telegram.org/bot${process.env.BOT_TOKEN}/setWebhook?url=${process.env.WEBHOOK_URL}`
+    ) {
       console.log("Webhook Set!");
     } else {
       console.log("Webhook not set!");
@@ -36,101 +46,95 @@ app.listen(PORT, () => {
 
 bot.start((ctx) => {
   ctx.reply(
-    "Welcome to the language translator bot!" +
+    "Hi, 🙋‍♂️ Welcome to the language translator bot!" +
       "\n" +
-      "This Bot was made with ❤ by @Ambiguous_cosmonaut" +
       "\n" +
-      "Type /help to get started."
-  );
-});
-
-bot.help((ctx) => {
-  ctx.reply(
-    "This bot translates text between languages. Type /translate to get started."
+      "This bot will automatically detect the language of the text you enter and translate it to the language of your choice." +
+      "\n" +
+      "\n" +
+      "Contact @Ambiguous_cosmonaut for any queries." +
+      "\n" +
+      "\n" +
+      "\n" +
+      "Type /translate to get started"
   );
 });
 
 const languageCodeMapping = {
-    english: "en",
-    chinese: "zh",
-    french: "fr",
-    german: "de",
-    italian: "it",
-    japanese: "ja",
-    korean: "ko",
-    portuguese: "pt",
-    russian: "ru",
-    spanish: "es",
-    amharic: "am",
-    hindi: "hi",
-    arabic: "ar",
-    turkish: "tr",
-    greek: "el",
+  english: "en",
+  chinese: "zh",
+  french: "fr",
+  german: "de",
+  italian: "it",
+  japanese: "ja",
+  korean: "ko",
+  portuguese: "pt",
+  russian: "ru",
+  spanish: "es",
+  amharic: "am",
+  hindi: "hi",
+  arabic: "ar",
+  turkish: "tr",
+  greek: "el",
 };
 
-bot.command("translate", (ctx) => {
+const translateScene = new Scenes.BaseScene("translateScene");
+translateScene.enter((ctx) => {
+  ctx.reply("Enter the text you want to translate");
+});
 
-    // prompt the user to enter the source language and the destination language
-    ctx.reply(
-        "Enter the source language and the destination language in the format: source language - text to be translated - destination language"
+const translate = new Scenes.BaseScene("translate");
+
+translateScene.on("text", async (ctx) => {
+  const inputText = ctx.message.text;
+  ctx.session.inputText = inputText;
+  const inputLanguage = await api.detect(inputText);
+  ctx.session.inputLanguage = inputLanguage;
+  // get the language from the detected language code
+  const language = Object.keys(languageCodeMapping).find(
+    (key) => languageCodeMapping[key] === inputLanguage
+  );
+  // make a 3 row keyboard with the languages which is also inlined
+  const keyboard = Markup.inlineKeyboard(
+    // return the inline buttons without using a callback function
+    Object.keys(languageCodeMapping).map((key) => {
+      return Markup.button.callback(key, key);
+    }),
+    { columns: 3 }
+  );
+  ctx.reply(
+    `The detected language is ${language}. Select the target language`,
+    keyboard
+  );
+  // listen to the user click on the button
+  translateScene.on("callback_query", async (ctx) => {
+    // get the target language from the session
+    const targetLanguage = ctx.update.callback_query.data;
+    // get the target language code
+    const targetLanguageCode = languageCodeMapping[targetLanguage];
+    ctx.session.targetLanguageCode = targetLanguageCode;
+    const translated = await api.translate(
+      inputLanguage,
+      targetLanguageCode,
+      inputText
     );
+    const ans = translated.data.translatedText;
+    ctx.reply(ans);
+    ctx.scene.leave();
+  });
+});
 
-    const outerContext = ctx;
+const stage = new Scenes.Stage([translateScene]);
+stage.register(translate);
+bot.use(session());
+bot.use(stage.middleware());
 
-    // listen for the user's response
-    bot.on((ctx) => {
-        // get the user's response
-        let userResponse = ctx.message.text;
-        // if the user's response is not in the correct format, prompt the user to enter the source language and the destination language again
-        if (!userResponse.includes("-")) {
-            ctx.reply(
-                "Please enter the source language and the destination language in the format: source language - text to be translated - destination language"
-            );
-            return;
-        }
-        // remove every whitespace next to and before the hyphen
-        userResponse = userResponse.replace(/\s*-\s*/g, "-");
-
-        // split the user's response into an array
-        let userResponseArray = userResponse.split("-");
-
-        // get the source language
-        let sourceLanguage = userResponseArray[0].toLowerCase();
-
-        // get the text to be translated
-        let textToBeTranslated = userResponseArray[1];
-
-        // get the destination language
-        let destinationLanguage = userResponseArray[2].toLowerCase();
-
-        // get the language code of the source language
-        let sourceLanguageCode = languageCodeMapping[sourceLanguage];
-
-        // get the language code of the destination language
-        let destinationLanguageCode = languageCodeMapping[destinationLanguage];
-
-        // call the api and return the response use async await
-        api
-            .translate(sourceLanguageCode, destinationLanguageCode, textToBeTranslated)
-            .then((response) => {
-                // return the response for usage in the next then block
-                const answer = response.data.translatedText;
-                return answer;
-            })
-            .then((answer) => {
-              outerContext.reply(answer);
-            })
-            .catch((error) => {
-                outerContext.reply("Server error occured :( Please Try again");
-                console.log(error);
-            }
-        );
-    });    
-  
+bot.command("translate", (ctx) => {
+  ctx.scene.enter("translateScene");
 });
 
 bot.launch({
-  polling: false
+  polling: false,
 });
 
 // graceful shutdown
